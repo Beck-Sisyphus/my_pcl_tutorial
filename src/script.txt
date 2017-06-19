@@ -1,0 +1,21 @@
+
+
+rosrun rqt_reconfigure rqt_reconfigure
+
+# The launch files are located in the launch directory:
+
+source ~/catkin_ws/devel/setup.bash
+roslaunch realsense_camera r200_nodelet_rgbd.launch
+
+# Before running rviz, you may need to set up a frame of reference
+
+source ~/catkin_ws/devel/setup.bash
+rosrun tf static_transform_publisher 0.0 0.0 0.0 0.0 0.0 0.0 map camera_depth_optical frame 100
+
+# Finally
+roscd realsense_camera
+rosrun rviz rviz -d rviz/realsenseRvizConfiguration1.rviz
+
+source ~/catkin_ws/devel/setup.bash
+rosrun my_pcl_tutorial cylinder_segmentation input:=/camera/depth/points
+
