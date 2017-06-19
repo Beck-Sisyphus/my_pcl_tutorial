@@ -139,10 +139,14 @@ add_executable(example src/example.cpp)
 add_executable(example_voxelgrid src/example_voxelgrid_pcl_types.cpp)
 add_executable(example_planar src/example_planarsegmentation.cpp)
 add_executable(cylinder_segmentation src/cylinder_segmentation.cpp)
+add_executable(don_segmentation src/don_segmentation.cpp)
+add_executable(cluster_extraction src/cluster_extraction.cpp)
 target_link_libraries(example ${catkin_LIBRARIES})
 target_link_libraries(example_voxelgrid ${catkin_LIBRARIES})
 target_link_libraries(example_planar ${catkin_LIBRARIES})
 target_link_libraries(cylinder_segmentation ${catkin_LIBRARIES})
+target_link_libraries(don_segmentation ${catkin_LIBRARIES})
+target_link_libraries(cluster_extraction ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

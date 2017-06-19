@@ -86,7 +86,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	// Load cloud in blob format
 	// pcl::PCLPointCloud2 blob;
 	// pcl::io::loadPCDFile (infile.c_str(), blob);
-	pcl::PointCloud2<PointXYZRGB>::Ptr cloud (new pcl::PointCloud<PointXYZRGB>);
+	pcl::PointCloud<PointXYZRGB>::Ptr cloud (new pcl::PointCloud<PointXYZRGB>);
 	// pcl::fromPCLPointCloud2 (blob, *cloud);
 	pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
 
@@ -133,7 +133,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	pcl::PointCloud<PointNormal>::Ptr normals_large_scale (new pcl::PointCloud<PointNormal>);
 
 	ne.setRadiusSearch(scale2);
-	ne.comput(*normals_large_scale);
+	ne.compute(*normals_large_scale);
 
 	// Create output cloud for DoN results
 	PointCloud<PointNormal>::Ptr doncloud (new pcl::PointCloud<PointNormal>);
@@ -177,7 +177,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	pcl::PointCloud<PointNormal>::Ptr doncloud_filtered (new pcl::PointCloud<PointNormal>);
 
 	// Apply filter
-	condrem.fitler (*doncloud_filtered);
+	condrem.filter (*doncloud_filtered);
 
 	doncloud = doncloud_filtered;
 

@@ -23,7 +23,7 @@
 
 #include <tf/transform_listener.h>
 #include <pcl_ros/transforms.h>
-#include "pcl_ros/transform.h"
+#include "pcl_ros/transforms.h"
 using namespace std;
 ros::Publisher pub;
 
@@ -114,7 +114,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
         std::stringstream ss;
         ss << "cloud_cluster" << j << ".pcd";
         writer.write<pcl::PointXYZ> (ss.str(), *cloud_cluster, false);
-        j++
+        j++;
     }
 }
 
