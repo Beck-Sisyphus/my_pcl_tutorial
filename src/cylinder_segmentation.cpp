@@ -13,7 +13,7 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 //#include "pcl/point_cloud.h"
-#include "point_cloud.h"
+#include "pcl_ros/point_cloud.h"
 
 ros::Publisher pubx;
 ros::Publisher puby;
@@ -58,7 +58,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	ne.setInputCloud(cloud_filtered);
 	ne.setKSearch(50);
 	ne.compute(*cloud_normals);
-	
+
 	// Create the segmentation object for the planar model and set all the parameters
 	seg.setOptimizeCoefficients(true);
 	seg.setModelType(pcl::SACMODEL_NORMAL_PLANE);
@@ -76,7 +76,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	extract.setInputCloud(cloud_filtered);
 	extract.setIndices(inliers_plane);
 	extract.setNegative(false);
-	
+
 	// Write the planar inliers to disk
 	pcl::PointCloud<PointT>::Ptr cloud_plane (new pcl::PointCloud<PointT> ());
 	extract.filter(*cloud_plane);
@@ -84,7 +84,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	// writer.write("table_scene_mug_stereo_textured_plane.pcd", *cloud_plane, false);
 	pcl::PCLPointCloud2 outcloud_plane;
 	pcl::toPCLPointCloud2 (*cloud_plane, outcloud_plane);
-	pubx.publish(outcloud_plane);	
+	pubx.publish(outcloud_plane);
 
 	// Remove the planar inliers, extract the rest
 	extract.setNegative(true);
@@ -93,7 +93,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	extract_normals.setInputCloud(cloud_normals);
 	extract_normals.setIndices(inliers_plane);
 	extract_normals.filter(*cloud_normals2);
-	
+
 	// Create the segmentation object for cylinder segmentation and set all the parameters
 	seg.setOptimizeCoefficients(true);
 	seg.setModelType(pcl::SACMODEL_CYLINDER);
@@ -104,7 +104,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	seg.setRadiusLimits(0, 0.1);
 	seg.setInputCloud(cloud_filtered2);
 	seg.setInputNormals(cloud_normals2);
-	
+
 	// Obtain the cylinder inliers and coefficients
 	seg.segment (*inliers_cylinder, *coefficients_cylinder);
 	std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
@@ -112,7 +112,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 	// Write the cylinder inliers to disk
 	extract.setInputCloud(cloud_filtered2);
 	extract.setIndices(inliers_cylinder);
-	extract.setNegative(false);	
+	extract.setNegative(false);
 	pcl::PointCloud<PointT>::Ptr cloud_cylinder (new pcl::PointCloud<PointT> ());
 	extract.filter(*cloud_cylinder);
 	if (cloud_cylinder->points.empty())
@@ -138,7 +138,7 @@ int main (int argc, char** argv)
 
 	// Create a ROS subscriber for the input point cloud
 	ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
-	
+
 	// Create a ROS publisher for the output point cloud
 	pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
 	puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
@@ -146,7 +146,3 @@ int main (int argc, char** argv)
 	// Spin
 	ros::spin();
 }
-
-
-
- 	

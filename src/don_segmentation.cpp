@@ -4,7 +4,10 @@
  * http://pointclouds.org/documentation/tutorials/don_segmentation.php#don-segmentation
  * PCL tutorial
  */
-
+#include <iostream>
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <string>
 
 #include <pcl/point_types.h>
@@ -17,10 +20,33 @@
 
 #include <pcl/features/don.h>
 
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/voxel_grid.h>
+
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/registration/icp.h>
+#include <pcl/point_cloud.h>
+#include <pcl/common/transformation_from_correspondences.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/keypoints/sift_keypoint.h>
+#include <pcl/registration/transforms.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <math.h>
+#include <cmath>
+#include <tf/transform_listener.h>
+#include <pcl_ros/transforms.h>
+#include "pcl_ros/transforms.h"
+
 using namespace pcl;
 using namespace std;
+ros::Publisher pub;
 
-int main (int argc, char *argv[])
+// int main (int argc, char *argv[])
+void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 {
 	/// The smallest scale to use in the DoN filter.
 	double scale1;
@@ -33,29 +59,36 @@ int main (int argc, char *argv[])
 
 	/// segment scen into clusters with given distance tolerance using euclidean clustering
 	double segradius;
-
-	if (argc < 6)	
+	/*
+	if (argc < 6)
 	{
 		cerr << "usage: " << argv[0] << " inputfile smallscale largescale threshold segradius" << endl;
 		exit(EXIT_FAILURE);
 	}
-
+	*/
 	/// the file to read from
-	string infile = argv[1];
+	//string infile = argv[1];
 	/// small scale
-	istringstream (argv[2]) >> scale1;
-	/// large scale 
-	istringstream (argv[3]) >> scale2;
+	//istringstream (argv[2]) >> scale1;
+	scale1 = 0.05;
+
+	/// large scale
+	//istringstream (argv[3]) >> scale2;
+	scale2 = 0.08;
+
 	/// threshold for DoN magnitude
-	istringstream (argv[4]) >> threshold;
+	//istringstream (argv[4]) >> threshold;
+	threshold = 1.0;
 	/// threshold for radius segmentation
-	istringstream (argv[5]) >> segradius;
+	//istringstream (argv[5]) >> segradius;
+	segradius = 0.1;
 
 	// Load cloud in blob format
-	pcl::PCLPointCloud2 blob;
-	pcl::io::loadPCDFile (infile.c_str(), blob);
+	// pcl::PCLPointCloud2 blob;
+	// pcl::io::loadPCDFile (infile.c_str(), blob);
 	pcl::PointCloud2<PointXYZRGB>::Ptr cloud (new pcl::PointCloud<PointXYZRGB>);
-	pcl::fromPCLPointCloud2 (blob, *cloud);
+	// pcl::fromPCLPointCloud2 (blob, *cloud);
+	pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
 
 	// Create a search tree, use KDTree for non-organized data.
 	pcl::search::Search<PointXYZRGB>::Ptr tree;
@@ -63,7 +96,7 @@ int main (int argc, char *argv[])
 	{
 		tree.reset (new pcl::search::OrganizedNeighbor<PointXYZRGB>());
 	}
-	else 
+	else
 	{
 		tree.reset (new pcl::search::KdTree<PointXYZRGB> (false));
 	}
@@ -186,5 +219,23 @@ int main (int argc, char *argv[])
 		stringstream ss;
 		ss << "don_cluster_" << j << ".pcd";
 		writer.write<pcl::PointNormal> (ss.str(), *cloud_cluster_don, false);
+		pcl::PCLPointCloud2 outcloud;
+		pcl::toPCLPointCloud2 (*cloud_cluster_don, outcloud);
+		pub.publish(outcloud);
 	}
+}
+
+int main(int argc, char **argv) {
+	// Initialize ROS
+	ros::init(argc, argv, "don_segmenters");
+	ros::NodeHandle nh;
+
+	// Create a ROS subscriber for the input point cloud
+	ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
+
+	// Create a ROS publisher for the output point cloud
+	pub = nh.advertise<pcl::PCLPointCloud2>("don_segments", 1);
+
+	// Spin
+	ros::spin();
 }
