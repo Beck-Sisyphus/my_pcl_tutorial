@@ -35,7 +35,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ> ), cloud_f(new pcl::PointCloud<pcl::PointXYZ> );
     // reader.read("data/table_scene_lms400.pcd", *cloud);
     // cout << "PointCloud before filtering has: " << cloud->points.size() << " data points." << endl;
-	pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
+    pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
 
     // Create the filtering object: downsample the dataset using a leaf size of 1cm
     pcl::VoxelGrid<pcl::PointXYZ>       vg;
@@ -55,7 +55,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
     seg.setModelType(pcl::SACMODEL_PLANE);
     seg.setMethodType(pcl::SAC_RANSAC);
     seg.setMaxIterations(100);
-    seg.setDistanceThreshold(0.02);
+    seg.setDistanceThreshold(0.03);
 
     int i = 0, nr_points = (int)cloud_filtered->points.size();
     while (cloud_filtered->points.size() > 0.3 * nr_points)
@@ -91,14 +91,16 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
 
     std::vector<pcl::PointIndices>                 cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(0.02);
-    ec.setMinClusterSize(100);
+    ec.setClusterTolerance(0.06);
+    ec.setMinClusterSize(30);
     ec.setMaxClusterSize(25000);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud_filtered);
     ec.extract(cluster_indices);
 
     int j = 0;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster_total(new pcl::PointCloud<pcl::PointXYZ> );
+
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it)
     {
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ> );
@@ -111,11 +113,19 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_blob)
         cloud_cluster->is_dense = true;
 
         cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size() << " data points." << endl;
-        std::stringstream ss;
-        ss << "cloud_cluster" << j << ".pcd";
-        writer.write<pcl::PointXYZ> (ss.str(), *cloud_cluster, false);
+        // std::stringstream ss;
+        // ss << "cloud_cluster" << j << ".pcd";
+        // writer.write<pcl::PointXYZ> (ss.str(), *cloud_cluster, false);
+        *cloud_cluster_total += *cloud_cluster;
+
         j++;
     }
+
+    sensor_msgs::PointCloud2 outcloud;
+    pcl::toROSMsg(*cloud_cluster_total, outcloud);
+    outcloud.header.frame_id = "/camera_depth_frame";
+    outcloud.header.stamp = ros::Time::now();
+    pub.publish(outcloud);
 }
 
 
