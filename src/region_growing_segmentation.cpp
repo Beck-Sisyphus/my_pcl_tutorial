@@ -43,7 +43,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_input)
     pass.setInputCloud(cloud_XYZ);
 //    pass.setInputCloud(cloud_XYZ);
     pass.setFilterFieldName("z");
-    pass.setFilterLimits(0.5, 1.0);
+    pass.setFilterLimits(0.5, 1.5);
     pass.filter(*cloud_XYZ_passthrough);
 
     // Create the voxel grid filtering object
@@ -104,7 +104,7 @@ void cloud_cb (const pcl::PCLPointCloud2ConstPtr& cloud_input)
     {
         // std::cout << "No colored cloud detected" << std::endl;
     }
-    outcloud.header.frame_id = "/camera_depth_frame";
+    outcloud.header.frame_id = "/camera_depth_optical_frame";
     outcloud.header.stamp = ros::Time::now();
     pub.publish(outcloud);
 }
